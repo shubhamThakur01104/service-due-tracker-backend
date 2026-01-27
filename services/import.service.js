@@ -3,7 +3,6 @@ import xlsx from "xlsx";
 import { Readable } from "stream";
 import { Customer } from "../models/customer.model.js";
 import { Unit } from "../models/unit.model.js";
-import APIError from "../utils/APIError.js";
 
 export const importCustomersAndUnits = async (fileBuffer) => {
     const buffer = Buffer.from(fileBuffer);
