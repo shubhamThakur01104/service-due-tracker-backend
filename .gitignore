@@ -15,7 +15,6 @@
 # Database Credentials #
 # ==================== #
 *.env
-config/db.js
 .env.example
 .env.sample
 
