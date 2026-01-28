@@ -5,7 +5,8 @@ import {
     getUnitsNeedingServiceController,
     getUnitsByCustomerController,
     updateUnitController,
-    deleteUnitController
+    deleteUnitController,
+    registerServiceCompletionController
 } from "../controllers/unit.controller.js";
 
 const router = express.Router();
@@ -35,6 +36,11 @@ router.get("/customer/:customerId", getUnitsByCustomerController);
    Update Unit
 ================================ */
 router.put("/:id", updateUnitController);
+
+/* ================================
+   Register Service Completion
+================================ */
+router.post("/:id/service-completion", registerServiceCompletionController);
 
 /* ================================
    Delete Unit

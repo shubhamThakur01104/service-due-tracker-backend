@@ -45,14 +45,31 @@ export const createUnit = async (data) => {
             // If date parsing fails, leave serviceIntervalDays as null/undefined
         }
     }
+    
+    // 4️⃣ If lastServiceDate is provided but nextServiceDate is not, and serviceIntervalDays is provided, automatically calculate nextServiceDate
+    let finalNextServiceDate = nextServiceDate;
+    if (lastServiceDate && serviceIntervalDays && !nextServiceDate) {
+        try {
+            const lastDate = new Date(lastServiceDate);
+            const intervalDays = parseInt(serviceIntervalDays);
+            
+            if (!isNaN(lastDate.getTime()) && intervalDays > 0) {
+                const calculatedNextDate = new Date(lastDate);
+                calculatedNextDate.setDate(calculatedNextDate.getDate() + intervalDays);
+                finalNextServiceDate = calculatedNextDate;
+            }
+        } catch (error) {
+            // If date parsing fails, leave nextServiceDate as provided
+        }
+    }
 
-    // 3️⃣ Create the unit linked to the customer
+    // 5️⃣ Create the unit linked to the customer
     const unitData = {
         customerId: customer._id,
         type,
         displayName,
         lastServiceDate,
-        nextServiceDate,
+        nextServiceDate: finalNextServiceDate,
         serviceIntervalDays: calculatedServiceIntervalDays
     };
 
@@ -98,6 +115,22 @@ export const getUnitsByCustomer = async (customerId) => {
    Update Unit
 ================================ */
 export const updateUnit = async (id, data) => {
+    // If lastServiceDate and serviceIntervalDays are provided, automatically calculate nextServiceDate
+    if (data.lastServiceDate && data.serviceIntervalDays) {
+        try {
+            const lastDate = new Date(data.lastServiceDate);
+            const intervalDays = parseInt(data.serviceIntervalDays);
+            
+            if (!isNaN(lastDate.getTime()) && intervalDays > 0) {
+                const nextDate = new Date(lastDate);
+                nextDate.setDate(nextDate.getDate() + intervalDays);
+                data.nextServiceDate = nextDate;
+            }
+        } catch (error) {
+            // If date parsing fails, leave nextServiceDate as is
+        }
+    }
+    
     const unit = await Unit.findByIdAndUpdate(id, data, {
         new: true
     });
@@ -107,6 +140,43 @@ export const updateUnit = async (id, data) => {
     }
 
     return unit;
+};
+
+/* ================================
+   Register Service Completion
+================================ */
+export const registerServiceCompletion = async (id, serviceDate = new Date()) => {
+    const unit = await Unit.findById(id);
+    
+    if (!unit) {
+        throw new APIError(404, "Unit not found");
+    }
+    
+    // If serviceIntervalDays is set, calculate next service date based on it
+    if (unit.serviceIntervalDays) {
+        const nextDate = new Date(serviceDate);
+        nextDate.setDate(nextDate.getDate() + unit.serviceIntervalDays);
+        
+        const updatedUnit = await Unit.findByIdAndUpdate(
+            id,
+            {
+                lastServiceDate: serviceDate,
+                nextServiceDate: nextDate
+            },
+            { new: true }
+        );
+        
+        return updatedUnit;
+    } else {
+        // If no interval is set, just update the last service date
+        const updatedUnit = await Unit.findByIdAndUpdate(
+            id,
+            { lastServiceDate: serviceDate },
+            { new: true }
+        );
+        
+        return updatedUnit;
+    }
 };
 
 /* ================================

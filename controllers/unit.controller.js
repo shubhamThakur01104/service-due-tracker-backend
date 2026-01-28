@@ -48,6 +48,18 @@ export const updateUnitController = asyncHandler(async (req, res) => {
 });
 
 /* ================================
+   Register Service Completion
+================================ */
+export const registerServiceCompletionController = asyncHandler(async (req, res) => {
+    const { serviceDate } = req.body;
+    const unit = await unitService.registerServiceCompletion(req.params.id, serviceDate ? new Date(serviceDate) : undefined);
+
+    res.status(200).json(
+        new APIResponse(200, unit, "Service completion registered successfully")
+    );
+});
+
+/* ================================
    Delete Unit
 ================================ */
 export const deleteUnitController = asyncHandler(async (req, res) => {
